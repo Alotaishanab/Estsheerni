@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct RegisterView: View {
+    @EnvironmentObject var authenticationManager: AuthenticationManager
     @State private var firstName = ""
     @State private var lastName = ""
     @State private var email = ""
@@ -16,7 +17,7 @@ struct RegisterView: View {
     @State private var passwordAgain = ""
     @State private var showAlert = false
     @State private var alertMessage = ""
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         NavigationView {
@@ -58,12 +59,21 @@ struct RegisterView: View {
                 
                 // Register button
                 Button(action: {
-                    // Check if fields are valid
                     if isValidFields() {
-                        // Handle register action
-                        self.presentationMode.wrappedValue.dismiss()
+                        authenticationManager.register(email: email, password: password, firstName: firstName, lastName: lastName) { result in
+                            switch result {
+                            case .success:
+                                // Registration successful, handle navigation or presentation logic here
+                                presentationMode.wrappedValue.dismiss()
+                            case .failure(let error):
+                                // Registration failed, handle the error
+                                showAlert = true
+                                alertMessage = error.description
+                            }
+                        }
                     } else {
-                        self.showAlert = true
+                        showAlert = true
+                        alertMessage = "Please fill in all the fields correctly."
                     }
                 }) {
                     Text("Register")
@@ -74,7 +84,7 @@ struct RegisterView: View {
                         .cornerRadius(10)
                 }
                 .alert(isPresented: $showAlert) {
-                    Alert(title: Text("Invalid Input"), message: Text(self.alertMessage), dismissButton: .default(Text("OK")))
+                    Alert(title: Text("Registration Error"), message: Text(alertMessage), dismissButton: .default(Text("OK")))
                 }
             }
             .padding()
@@ -85,7 +95,6 @@ struct RegisterView: View {
     func isValidFields() -> Bool {
         // Check if name is not empty
         if firstName.isEmpty || lastName.isEmpty {
-            alertMessage = "Please enter your full name."
             return false
         }
         
@@ -93,7 +102,6 @@ struct RegisterView: View {
         let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}"
         let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
         if !emailPred.evaluate(with: email) {
-            alertMessage = "Please enter a valid email."
             return false
         }
         
@@ -101,19 +109,19 @@ struct RegisterView: View {
         let phoneNumberRegEx = "^05[0-9]{8}$"
         let phoneNumberPred = NSPredicate(format:"SELF MATCHES %@", phoneNumberRegEx)
         if !phoneNumberPred.evaluate(with: phoneNumber) {
-            alertMessage = "Please enter a valid phone number."
             return false
         }
         
         // Check if password is not empty and matches
         if password.isEmpty || password != passwordAgain {
-            alertMessage = "Please enter a matching password."
             return false
         }
         
         return true
     }
 }
+
+
 
     
 

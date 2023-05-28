@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct LoginView: View {
+    @EnvironmentObject var authenticationManager: AuthenticationManager
     @State private var email = ""
     @State private var password = ""
-
+    
     var body: some View {
         VStack {
             Text("Login")
@@ -23,16 +24,15 @@ struct LoginView: View {
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
                 .padding(.bottom, 10)
-
+            
             SecureField("Password", text: $password)
                 .padding()
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
                 .padding(.bottom, 20)
-
+            
             Button(action: {
-                // Perform login action
-                print("Logging in the user...")
+                authenticationManager.logIn(email: email, password: password)
             }) {
                 Text("Login")
                     .fontWeight(.bold)
@@ -45,3 +45,5 @@ struct LoginView: View {
         .padding()
     }
 }
+
+

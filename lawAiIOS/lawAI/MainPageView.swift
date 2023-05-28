@@ -1,8 +1,8 @@
 //
-//  MainPage.swift
-//  lawAI
+//  MainPageView.swift
+//  
 //
-//  Created by Abdullah on 25/05/2023.
+//  Created by Abdullah on 28/05/2023.
 //
 
 import SwiftUI

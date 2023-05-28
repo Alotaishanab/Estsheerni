@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct lawAIApp: App {
+    @StateObject var authenticationManager = AuthenticationManager()
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(authenticationManager)
         }
     }
 }
