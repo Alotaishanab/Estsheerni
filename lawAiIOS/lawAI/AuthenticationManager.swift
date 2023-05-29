@@ -10,6 +10,7 @@ import Combine
 import Alamofire
 import KeychainAccess
 import CryptoKit
+import SwiftyJSON
 
 enum AuthenticationError: Error, CustomStringConvertible {
     case loginFailed
@@ -19,6 +20,7 @@ enum AuthenticationError: Error, CustomStringConvertible {
     case tokenReadFailed
     case encryptionFailed
     case decryptionFailed
+    case registrationFailed
 
     var description: String {
         switch self {
@@ -36,6 +38,8 @@ enum AuthenticationError: Error, CustomStringConvertible {
             return "Could not encrypt user token"
         case .decryptionFailed:
             return "Could not decrypt user token"
+        case .registrationFailed:
+            return "Registration failed"
         }
     }
 }
@@ -45,75 +49,116 @@ class AuthenticationManager: ObservableObject {
     @Published var error: AuthenticationError?
     
     private let keychain = Keychain(service: "com.your.app.service")
-    private let loginEndpoint = "https://yourbackend.com/login"
-    private let refreshTokenEndpoint = "https://yourbackend.com/refresh_token"
+    private let loginEndpoint = "http://127.0.0.1:8000/login/"
+    private let registerEndpoint = "http://127.0.0.1:8000/register/"
+    private let refreshTokenEndpoint = "http://127.0.0.1:8000/refresh_token/"
 
     private let tokenKey = "UserToken"
     private let keyTag = "com.your.app.keys.mykey"
-    
-    func register(email: String, password: String, firstName: String, lastName: String, completion: @escaping (Result<Void, AuthenticationError>) -> Void) {
-            // Your logic for registering a user goes here
-            // For example, you might make a network request to your backend API to create a new user
-
-            // When you're done, you should call the completion handler with the result
-            // For example:
-            //   completion(.success(())) if the registration was successful, or
-            //   completion(.failure(.registrationFailed)) if there was an error
-        }
 
     private var encryptionKey: SymmetricKey? {
-            if let keyData = keychain[data: keyTag] {
-                return SymmetricKey(data: keyData)
-            }
-            return nil
+        if let keyData = keychain[data: keyTag] {
+            return SymmetricKey(data: keyData)
         }
+        return nil
+    }
 
-        init() {
-            // Generate a new encryption key only if one doesn't exist.
-            if encryptionKey == nil {
-                let key = SymmetricKey(size: .bits256)
-                let keyData = key.withUnsafeBytes({ Data($0) })
-                keychain[data: keyTag] = keyData
-            }
+    init() {
+        // Generate a new encryption key only if one doesn't exist.
+        if encryptionKey == nil {
+            let key = SymmetricKey(size: .bits256)
+            let keyData = key.withUnsafeBytes({ Data($0) })
+            keychain[data: keyTag] = keyData
         }
+    }
     
     // Hash password
-        private func hashPassword(_ password: String) -> String {
-            let passwordData = Data(password.utf8)
-            let hashedData = SHA256.hash(data: passwordData)
-            return hashedData.compactMap { String(format: "%02x", $0) }.joined()
-        }
-        
+    private func hashPassword(_ password: String) -> String {
+        let passwordData = Data(password.utf8)
+        let hashedData = SHA256.hash(data: passwordData)
+        return hashedData.compactMap { String(format: "%02x", $0) }.joined()
+    }
+    
     // LogIn
-        func logIn(email: String, password: String) {
-            let hashedPassword = hashPassword(password)
-            let parameters: [String: Any] = [
-                "email": email,  
-                "password": hashedPassword
-            ]
-            
-            AF.request(loginEndpoint, method: .post, parameters: parameters)
-                        .validate(statusCode: 200..<300)
-                        .response { response in
-                            switch response.result {
-                            case .success(let data):
-                                if let token = String(data: data ?? Data(), encoding: .utf8),
-                                   let encryptedToken = try? self.encryptToken(token) {
-                                    do {
-                                        try self.saveToken(encryptedToken)  // Use try here
-                                        self.isLoggedIn = true
-                                    } catch {
-                                        self.error = .tokenSaveFailed
-                                    }
-                                } else {
-                                    self.error = .loginFailed
-                                }
-                            case .failure(let error):
-                                print("Login request failed: \(error)")
-                                self.error = .loginFailed
-                            }
+    func logIn(email: String, password: String) {
+        let hashedPassword = hashPassword(password)
+        let parameters: [String: Any] = [
+            "email": email,
+            "password": hashedPassword
+        ]
+        
+        AF.request(loginEndpoint, method: .post, parameters: parameters)
+            .validate(statusCode: 200..<300)
+            .response { response in
+                switch response.result {
+                case .success(let data):
+                    do {
+                        let json = try JSON(data: data ?? Data())
+                        if let token = json["token"].string,
+                           let encryptedToken = try? self.encryptToken(token) {
+                            try self.saveToken(encryptedToken)
+                            self.isLoggedIn = true
+                        } else {
+                            self.error = .loginFailed
                         }
+                    } catch {
+                        print("JSON parsing failed: \(error)")
+                        self.error = .loginFailed
+                    }
+                case .failure(let error):
+                    print("Login request failed: \(error)")
+                    self.error = .loginFailed
                 }
+            }
+    }
+    
+    // Register
+    func register(email: String, password: String, firstName: String, lastName: String, phoneNumber: String, completion: @escaping (Result<Void, AuthenticationError>) -> Void) {
+        let parameters: [String: Any] = [
+            "email": email,
+            "password": password,
+            "profile": [
+                "first_name": firstName,
+                "last_name": lastName,
+                "phone_number": phoneNumber
+            ]
+        ]
+
+        AF.request(registerEndpoint, method: .post, parameters: parameters)
+            .validate(statusCode: 200..<300)
+            .response { response in
+                switch response.result {
+                case .success:
+                    completion(.success(()))
+                case .failure(let error):
+                    print("Registration request failed: \(error)")
+                    completion(.failure(.registrationFailed))
+                }
+            }
+    }
+      
+
+
+    // Encrypt token
+       private func encryptToken(_ token: String) throws -> String {
+           // Make sure token can be converted to Data
+           guard let data = token.data(using: .utf8) else {
+               throw AuthenticationError.encryptionFailed
+           }
+           // Make sure encryption key is available
+           guard let key = encryptionKey else {
+               throw AuthenticationError.encryptionFailed
+           }
+           let sealedBox = try ChaChaPoly.seal(data, using: key)
+           return sealedBox.combined.base64EncodedString()
+       }
+
+       // Save token to Keychain
+       private func saveToken(_ token: String) throws {
+           try keychain.set(token, key: tokenKey)
+       }
+    
+    
     
     // LogOut
     func logOut() {
@@ -122,19 +167,7 @@ class AuthenticationManager: ObservableObject {
         self.isLoggedIn = false
     }
     
-    // Encrypt token
-        private func encryptToken(_ token: String) throws -> String {
-            // Make sure token can be converted to Data
-            guard let data = token.data(using: .utf8) else {
-                throw AuthenticationError.encryptionFailed
-            }
-            // Make sure encryption key is available
-            guard let key = encryptionKey else {
-                throw AuthenticationError.encryptionFailed
-            }
-            let sealedBox = try ChaChaPoly.seal(data, using: key)
-            return sealedBox.combined.base64EncodedString()
-        }
+  
 
         // Decrypt token
         private func decryptToken(_ encryptedToken: String) throws -> String {
@@ -155,11 +188,7 @@ class AuthenticationManager: ObservableObject {
             return token
         }
         
-        // Save token to Keychain
-        private func saveToken(_ token: String) throws {
-            try keychain.set(token, key: tokenKey)
-        }
-    
+       
     // Delete token from Keychain
     private func deleteToken() {
         do {

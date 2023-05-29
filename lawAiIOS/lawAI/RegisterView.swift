@@ -60,7 +60,7 @@ struct RegisterView: View {
                 // Register button
                 Button(action: {
                     if isValidFields() {
-                        authenticationManager.register(email: email, password: password, firstName: firstName, lastName: lastName) { result in
+                        authenticationManager.register(email: email, password: password, firstName: firstName, lastName: lastName, phoneNumber: phoneNumber) { result in
                             switch result {
                             case .success:
                                 // Registration successful, handle navigation or presentation logic here
