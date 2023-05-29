@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+/*login in view page required:
+ @username
+ @password
+*/
 struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
