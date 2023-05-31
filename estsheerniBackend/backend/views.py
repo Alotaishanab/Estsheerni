@@ -5,7 +5,6 @@ from rest_framework.decorators import api_view
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 
-from .models import CustomUser
 from .serializers import UserRegisterSerializer
 from dj_rest_auth.views import LoginView
 from dj_rest_auth.registration.views import RegisterView
