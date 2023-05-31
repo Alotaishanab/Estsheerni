@@ -2,20 +2,22 @@ from django.contrib.auth.hashers import make_password
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-from dj_rest_auth.registration.views import RegisterView as DjRestAuthRegisterView
-from dj_rest_auth.views import LoginView as DjRestAuthLoginView
 from django.http import JsonResponse
 from rest_framework.authtoken.models import Token
 
+from .models import CustomUser
+from .serializers import UserRegisterSerializer
+from dj_rest_auth.views import LoginView
+from dj_rest_auth.registration.views import RegisterView
 
-from .models import CustomUser, UserProfile
-from .serializers import UserSerializer, UserProfileSerializer, UserRegisterSerializer
 
-class CustomRegisterView(DjRestAuthRegisterView):
+class CustomRegisterView(RegisterView):
     serializer_class = UserRegisterSerializer
 
-class CustomLoginView(DjRestAuthLoginView):
-    serializer_class = UserSerializer
+class CustomLoginView(LoginView):
+    serializer_class = UserRegisterSerializer
+
+
 
 @api_view(['POST'])
 def register(request):
@@ -29,6 +31,7 @@ def register(request):
             'phone_number': request.data.get('profile[phone_number]')
         }
     }
+    print("Received data: ", data)
 
     serializer = UserRegisterSerializer(data=data)
     
@@ -50,9 +53,22 @@ def register(request):
 
 @api_view(['POST'])
 def login(request):
+    print(request.data)  # Debug: print request data
+    email = request.data.get('email')
+    password = request.data.get('password')
+    profile = {}  # Initialize an empty profile dictionary
+
+    data = {
+        'email': email,
+        'password': password,
+        'profile': profile  # Include the profile field in the data dictionary
+    }
+    print("Login Request Parameters:", data)
+
     view = CustomLoginView.as_view()
     response = view(request._request)
-    if response.status_code == status.HTTP_200_OK:
-        return Response({'token': response.data['key']}, status=status.HTTP_200_OK)
-    else:
-        return Response({'error': 'Invalid Credentials'}, status=response.status_code)
+    print(response.data)  # Debug: print response data
+    print(response.status_code)  # Debug: print response status code
+    return response
+
+

@@ -11,6 +11,8 @@ import Alamofire
 import KeychainAccess
 import CryptoKit
 import SwiftyJSON
+import UIKit
+import SwiftUI
 
 enum AuthenticationError: Error, CustomStringConvertible {
     case loginFailed
@@ -47,7 +49,7 @@ enum AuthenticationError: Error, CustomStringConvertible {
 class AuthenticationManager: ObservableObject {
     @Published var isLoggedIn: Bool = false
     @Published var error: AuthenticationError?
-    
+
     private let keychain = Keychain(service: "com.your.app.service")
     private let loginEndpoint = "http://127.0.0.1:8000/login/"
     private let registerEndpoint = "http://127.0.0.1:8000/register/"
@@ -72,20 +74,15 @@ class AuthenticationManager: ObservableObject {
         }
     }
     
-    // Hash password
-    private func hashPassword(_ password: String) -> String {
-        let passwordData = Data(password.utf8)
-        let hashedData = SHA256.hash(data: passwordData)
-        return hashedData.compactMap { String(format: "%02x", $0) }.joined()
-    }
-    
     // LogIn
-    func logIn(email: String, password: String) {
-        let hashedPassword = hashPassword(password)
+    func logIn(email: String, password: String, completion: @escaping (Result<Void, AuthenticationError>) -> Void) {
         let parameters: [String: Any] = [
             "email": email,
-            "password": hashedPassword
+            "password": password,
+            "profile": [:] // Empty profile field
         ]
+        
+        print("Login Request Parameters: \(parameters)")
         
         AF.request(loginEndpoint, method: .post, parameters: parameters)
             .validate(statusCode: 200..<300)
@@ -98,6 +95,7 @@ class AuthenticationManager: ObservableObject {
                            let encryptedToken = try? self.encryptToken(token) {
                             try self.saveToken(encryptedToken)
                             self.isLoggedIn = true
+                            completion(.success(())) // signal successful login
                         } else {
                             self.error = .loginFailed
                         }
@@ -111,6 +109,8 @@ class AuthenticationManager: ObservableObject {
                 }
             }
     }
+
+
     
     // Register
     func register(email: String, password: String, firstName: String, lastName: String, phoneNumber: String, completion: @escaping (Result<Void, AuthenticationError>) -> Void) {
@@ -129,14 +129,23 @@ class AuthenticationManager: ObservableObject {
             .response { response in
                 switch response.result {
                 case .success:
+                    guard let window = UIApplication.shared.windows.first else {
+                        completion(.failure(.registrationFailed))
+                        return
+                    }
+                    
+                    let tabBarViewController = TabBarViewController()
+                    let hostingController = UIHostingController(rootView: tabBarViewController)
+                    window.rootViewController = hostingController
                     completion(.success(()))
+                    
                 case .failure(let error):
                     print("Registration request failed: \(error)")
                     completion(.failure(.registrationFailed))
                 }
             }
     }
-      
+
 
 
     // Encrypt token

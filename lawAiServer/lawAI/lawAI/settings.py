@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    # other apps
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -39,12 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'corsheaders',
     'rest_framework',
-    'dj_rest_auth',
     'allauth',
     'allauth.account',
     'rest_framework.authtoken', 
+    'djoser',
+    'dj_rest_auth',
     'lawAiServer',
+    'django.contrib.admin',
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -108,6 +111,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'djoser.backends.TokenBackend',
+]
+
+DJOSER = {
+    'LOGIN_FIELD': 'email'
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
