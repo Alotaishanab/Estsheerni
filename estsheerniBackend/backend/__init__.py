@@ -1,2 +1,1 @@
-default_app_config = 'lawAiServer.apps.LawAIServerConfig'
-
+default_app_config = 'backend.apps.backendConfig'

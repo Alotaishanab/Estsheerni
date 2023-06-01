@@ -1,4 +1,4 @@
-"""lawAI URL Configuration
+"""estsheerniBackend URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.1/topics/http/urls/
@@ -16,16 +16,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
-from lawAiServer.views import login,register
-from lawAiServer.views import CustomLoginView
-
+from backend.views import register, login
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),  # Optional, for browsing the API
+    path('api-auth/', include('rest_framework.urls')),
     path('api/token/', obtain_auth_token),
     path('login/', login, name='login'),
-    path('register/', register),
+    path('register/', register, name='register'),
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
     path('auth/', include('djoser.urls.authtoken')),
