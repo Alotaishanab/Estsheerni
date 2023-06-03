@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.conf import settings
+from django.contrib.auth import get_user_model
 
 
 class CustomUserManager(BaseUserManager):
@@ -34,8 +35,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
 
-    def has_module_perms(self, app_label):
-        """
-        Returns True if the user has any permissions in the given app label.
-        """
-        return True  # Modify this logic based on your permission requirements
+class Conversation(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+
+class Message(models.Model):
+    conversation = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
+    sender = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
+    content = models.CharField(max_length=10000)  # replace EncryptedCharField with CharField
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_user_message = models.BooleanField(default=True)

@@ -16,7 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
-from backend.views import register, login
+from backend.views import register, login, conversation_list, conversation_detail
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,4 +28,6 @@ urlpatterns = [
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.jwt')),
     path('auth/', include('djoser.urls.authtoken')),
+    path('api/conversations/', conversation_list, name='conversation_list'),
+    path('api/conversations/<int:pk>/', conversation_detail, name='conversation_detail'),
 ]
