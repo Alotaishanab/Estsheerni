@@ -12,6 +12,7 @@ from Crypto.Util.Padding import pad, unpad
 from base64 import b64encode, b64decode
 from django.conf import settings
 from django.core.exceptions import ValidationError
+from django.core.cache import cache
 
 User = get_user_model()
 
@@ -31,11 +32,9 @@ def register(request):
     serializer = UserSerializer(data=user_data)
     if serializer.is_valid():
         user = serializer.save()
-        token, _ = Token.objects.get_or_create(user=user)
         data = {
             'response': 'Successfully registered new user.',
             'email': user.email,
-            'token': token.key
         }
         return Response(data, status=status.HTTP_201_CREATED)
     else:
@@ -62,53 +61,58 @@ def get_ai_user(): # a function to get the AI user
     pass
 
 
-@api_view(['GET', 'POST'])
-@permission_classes([permissions.IsAuthenticated])
-def conversation_list(request):
-    if request.method == 'GET':
-        conversations = Conversation.objects.filter(created_by=request.user)
-        serializer = ConversationSerializer(conversations, many=True)
-        return Response(serializer.data)
-    elif request.method == 'POST':
-        serializer = ConversationSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(created_by=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 def encrypt_message(content):
-    cipher = AES.new(settings.SECRET_KEY[:16], AES.MODE_ECB)
+    cipher = AES.new(os.getenv('SECRET_KEY')[:16], AES.MODE_ECB)
     ciphertext = cipher.encrypt(pad(content.encode(), 16))
     return b64encode(ciphertext).decode()
 
 def decrypt_message(ciphertext):
     try:
-        cipher = AES.new(settings.SECRET_KEY[:16], AES.MODE_ECB)
+        cipher = AES.new(os.getenv('SECRET_KEY')[:16], AES.MODE_ECB)
         content = unpad(cipher.decrypt(b64decode(ciphertext)), 16)
         return content.decode()
     except Exception:
-        raise ValidationError('Unable to decrypt message.')
+        return None
 
-# Replace the encryption and decryption lines in your conversation_detail view
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def conversation_list(request):
+    if request.method == 'GET':
+        conversations = Conversation.objects.filter(created_by=request.user)
+        data = []
+        for conversation in conversations:
+            conversation_data = cache.get(f'conversation_{conversation.id}')
+            if not conversation_data:
+                serializer = ConversationSerializer(conversation)
+                conversation_data = serializer.data
+                cache.set(f'conversation_{conversation.id}', conversation_data, 300)
+            data.append(conversation_data)
+        return Response(data)
+    elif request.method == 'POST':
+        serializer = ConversationSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(created_by=request.user)
+            cache.delete('conversation_list')  # Delete the cache as new conversation has been created
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])
 def conversation_detail(request, pk):
     try:
-        conversation = Conversation.objects.get(pk=pk)
+        conversation = Conversation.objects.select_related('created_by').prefetch_related('messages').get(pk=pk)
     except Conversation.DoesNotExist:
         raise exceptions.NotFound("A conversation with this ID does not exist.")
 
     if request.method == 'GET':
         if conversation.created_by != request.user:
             raise exceptions.PermissionDenied("You cannot view another user's conversation.")
-
         # Decrypt the messages before sending them
         for message in conversation.messages.all():
             try:
                 message.content = decrypt_message(message.content)
             except ValidationError as ve:
                 return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
-
         serializer = ConversationSerializer(conversation)
         return Response(serializer.data)
 
@@ -122,18 +126,20 @@ def conversation_detail(request, pk):
         if serializer.is_valid():
             if serializer.validated_data['conversation'].created_by != request.user:
                 raise exceptions.PermissionDenied("You cannot post a message in another user's conversation.")
+            
             message = serializer.save()
-
+            cache.delete(f'conversation_{message.conversation.id}')  # Invalidate the cache
+            
             # Call a function to generate AI response
             response_content = encrypt_message('AI response coming soon...')
-
+            
             # Create a new message for the AI's response
             response_message = Message.objects.create(
                 conversation=message.conversation,
                 sender=get_ai_user(),  # a function to get the AI user
-                content=encrypt_message(response_content),
+                content=response_content,
                 is_user_message=False
             )
             return Response(MessageSerializer(response_message).data, status=status.HTTP_201_CREATED)
-
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -43,6 +43,6 @@ class Conversation(models.Model):
 class Message(models.Model):
     conversation = models.ForeignKey(Conversation, related_name='messages', on_delete=models.CASCADE)
     sender = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    content = models.CharField(max_length=10000)  # replace EncryptedCharField with CharField
+    content = models.CharField(max_length=500)  
     timestamp = models.DateTimeField(auto_now_add=True)
     is_user_message = models.BooleanField(default=True)
