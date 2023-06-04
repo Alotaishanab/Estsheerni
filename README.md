@@ -1,0 +1,43 @@
+Estsheerni (استشيرني)
+
+Overview
+
+Estsheerni is an innovative application offering professional-grade legal consultation rooted in Saudi Sharia law. Harnessing AI power, the platform facilitates user-friendly interactions, providing a reliable source of legal information and guidance. By aiming to bridge the gap between users and legal professionals, Estsheerni makes accurate and user-friendly legal information more accessible.
+
+Our Team
+
+Abdullah AlOtaishan (Project Leader)
+Ezzat AlSalibi (Junior Developer)
+Osama Bugshan (Junior Developer)
+Abdulmohsen AlSaud (Lawyer)
+Technology Stack
+
+Frontend: React Native
+Backend: Python/Django
+Key Features
+
+User Registration and Authentication: Users can easily set up accounts, granting them access to the comprehensive functionalities of the Estsheerni chatbot.
+Interactive Chatbot: Engage with our AI-driven chatbot to ask legal queries, obtain general legal consultation, and gain insight into legal rights within the Saudi Sharia legal system.
+Conversation History: Users have the option to review their past interactions with the chatbot, allowing them to refer back to previous consultations when needed.
+Legal Resource Database: Estsheerni includes a vast array of legal resources pertaining to Saudi Sharia law, providing users with a wealth of information at their fingertips.
+User Profile Management: Users can effortlessly manage their profiles, update personal details, and view their history of consultations for easy reference.
+Quick Setup Guide
+
+Clone the repository: git clone <repository-url>
+Navigate to the frontend directory: cd frontend
+Install the dependencies: npm install
+Start the frontend development server: npm start
+Navigate to the backend directory: cd backend
+Install the Python dependencies: pip install -r requirements.txt
+Run database migrations: python manage.py migrate
+Start the backend server: python manage.py runserver
+How to Contribute
+
+Fork the repository
+Create a new branch: git checkout -b feature/your-feature-name
+Make your changes and commit them: git commit -m 'Add some feature'
+Push to your branch: git push origin feature/your-feature-name
+Create a new pull request
+Get in Touch
+
+For further queries or information, please contact the Project Leader, Abdullah AlOtaishan, at abdullah.alotaishan@kcl.ac.uk.
