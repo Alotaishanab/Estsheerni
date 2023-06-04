@@ -6,10 +6,10 @@ Estsheerni is an innovative application offering professional-grade legal consul
 
 Our Team
 
-Abdullah AlOtaishan (Project Leader)
-Ezzat AlSalibi (Junior Developer)
-Osama Bugshan (Junior Developer)
-Abdulmohsen AlSaud (Lawyer)
+Abdullah AlOtaishan
+Ezzat AlSalibi 
+Osama Bugshan
+
 Technology Stack
 
 Frontend: React Native
