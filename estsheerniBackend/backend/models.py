@@ -46,3 +46,7 @@ class Message(models.Model):
     content = models.CharField(max_length=500)  
     timestamp = models.DateTimeField(auto_now_add=True)
     is_user_message = models.BooleanField(default=True)
+
+
+
+

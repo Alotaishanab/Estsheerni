@@ -1,6 +1,0 @@
-framework module Pods_lawAI_lawAIUITests {
-  umbrella header "Pods-lawAI-lawAIUITests-umbrella.h"
-
-  export *
-  module * { export * }
-}
