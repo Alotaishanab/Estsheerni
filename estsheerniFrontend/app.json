@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "lawAIApp",
-    "slug": "lawAIApp",
+    "name": "estsheerniFrontend",
+    "slug": "estsheerniFrontend",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
