@@ -168,3 +168,4 @@ ACCOUNT_UNIQUE_EMAIL = True
 # Retrieve session data from cache 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 
+
