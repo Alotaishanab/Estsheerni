@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import HomeView from './HomeView';
 import LoginView from './LoginView';
 
@@ -19,10 +19,17 @@ const MainPageView = () => {
     };
 
     return (
-        <View>
+        <View style={styles.container}>
             {isLoggedIn ? <HomeView /> : <LoginView />}
         </View>
     );
 };
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#F5F5F5',
+    },
+});
 
 export default MainPageView;

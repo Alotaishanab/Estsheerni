@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Text, Image, View, Button, StyleSheet } from 'react-native';
+import { Text, Image, View, TouchableOpacity, StyleSheet } from 'react-native';
 
-const StandardButton = ({title, color, onPress}) => (
-    <Button title={title} color={color} onPress={onPress} />
+const CustomButton = ({title, color, onPress}) => (
+    <TouchableOpacity onPress={onPress} style={[styles.button, {backgroundColor: color}]}>
+        <Text style={styles.buttonText}>{title}</Text>
+    </TouchableOpacity>
 );
 
 const HomeView = () => {
@@ -19,16 +21,16 @@ const HomeView = () => {
             </View>
 
             {isLoggedIn ? (
-                <StandardButton title="View Homepage" color="blue" onPress={() => {}} />
+                <CustomButton title="View Homepage" color="#406E9F" onPress={() => {}} />
             ) : (
                 <View>
-                    <StandardButton title="Login" color="blue" onPress={() => {}} />
-                    <StandardButton title="Register" color="green" onPress={() => {}} />
+                    <CustomButton title="Login" color="#406E9F" onPress={() => {}} />
+                    <CustomButton title="Register" color="#2E7D32" onPress={() => {}} />
 
                     <View style={styles.divider} />
 
-                    <StandardButton title="Continue with Apple" color="black" onPress={() => setIsLoggedIn(true)} />
-                    <StandardButton title="Continue with Google" color="red" onPress={() => setIsLoggedIn(true)} />
+                    <CustomButton title="Continue with Apple" color="#000" onPress={() => setIsLoggedIn(true)} />
+                    <CustomButton title="Continue with Google" color="#4285F4" onPress={() => setIsLoggedIn(true)} />
                 </View>
             )}
         </View>
@@ -39,7 +41,8 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        alignItems: 'center'
+        alignItems: 'center',
+        backgroundColor: '#F5F5F5',
     },
     image: {
         width: 80,
@@ -49,7 +52,8 @@ const styles = StyleSheet.create({
     header: {
         fontSize: 34,
         fontWeight: 'bold',
-        marginBottom: 20
+        marginBottom: 20,
+        color: '#406E9F',
     },
     textContainer: {
         width: '80%',
@@ -58,7 +62,8 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: 'bold',
-        marginBottom: 10
+        marginBottom: 10,
+        color: '#2E7D32',
     },
     subtitle: {
         fontSize: 16,
@@ -70,6 +75,17 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         marginBottom: 10,
         width: '100%',
+    },
+    button: {
+        borderRadius: 10,
+        padding: 15,
+        marginBottom: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontSize: 18,
+        color: '#fff',
     },
 });
 
